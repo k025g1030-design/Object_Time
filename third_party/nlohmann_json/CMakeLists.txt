@@ -14,8 +14,8 @@ set(FETCHCONTENT_UPDATES_DISCONNECTED ON CACHE BOOL "" FORCE)
 # テスト不要なら（バージョンによりオプション名が変わる可能性あり）
 # set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
-        nlohmann_json
-        GIT_REPOSITORY https://github.com/nlohmann/json.git
-        GIT_TAG        v3.12.0
+    nlohmann_json
+    GIT_REPOSITORY https://github.com/nlohmann/json.git
+    GIT_TAG        v3.12.0
 )
 FetchContent_MakeAvailable(nlohmann_json)

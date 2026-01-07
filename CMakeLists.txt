@@ -26,36 +26,42 @@ add_subdirectory(third_party)
 #add_subdirectory(game)
 #add_subdirectory(game)
 
+
+
+# ----------------------------
+# App
+# ----------------------------
+# App 実装（main なし）
 if(BUILD_GAME)
     add_subdirectory(game)
 endif()
 
 if(BUILD_TOOLS)
-    add_subdirectory(tools/editor)
+    add_subdirectory(tools)
 endif()
 
-# ----------------------------
-# App
-# ----------------------------
-add_executable(${PROJECT_NAME} WIN32
-#        apps/editor/EditorMain.cpp
-        apps/runtime/main.cpp
-)
+
+# 実行入口（main あり）
+add_subdirectory(apps)
+
+#add_executable(${PROJECT_NAME} WIN32
+#        apps/runtime/game_main.cpp
+#)
 
 # SDLの「SDL_main」を使わず自前 main() にする（保険）
-target_compile_definitions(${PROJECT_NAME} PRIVATE SDL_MAIN_HANDLED)
-
-target_link_libraries(${PROJECT_NAME} PRIVATE
-        SDL3::SDL3
-        imgui_lib
-        nlohmann_json::nlohmann_json
-)
-
-# Windows: 実行時にSDL3.dllが必要な場合があるので、exeの隣にコピー
-if (WIN32)
-    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<TARGET_FILE:SDL3::SDL3>
-            $<TARGET_FILE_DIR:${PROJECT_NAME}>
-    )
-endif()
+#target_compile_definitions(${PROJECT_NAME} PRIVATE SDL_MAIN_HANDLED)
+#
+#target_link_libraries(${PROJECT_NAME} PRIVATE
+#    SDL3::SDL3
+#    imgui_lib
+#    nlohmann_json::nlohmann_json
+#)
+#
+## Windows: 実行時にSDL3.dllが必要な場合があるので、exeの隣にコピー
+#if (WIN32)
+#    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+#        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+#        $<TARGET_FILE:SDL3::SDL3>
+#        $<TARGET_FILE_DIR:${PROJECT_NAME}>
+#    )
+#endif()

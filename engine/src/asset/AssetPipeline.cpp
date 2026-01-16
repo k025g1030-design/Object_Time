@@ -4,59 +4,59 @@
 
 namespace Engine::Asset::Loading {
 
-AssetPipeline::AssetPipeline(IAssetSource& source, LoaderRegistry& registry)
-    : source_(source), registry_(registry) {}
+    AssetPipeline::AssetPipeline(IAssetSource& source, LoaderRegistry& registry)
+        : source_(source), registry_(registry) {}
 
-Detail::Result<Core::AnyAsset, AssetError>
-AssetPipeline::Load(const LoadContext& ctx) {
-    // 0) 基本検証
-    if (!ctx.HasPath()) {
-        return Detail::Result<Core::AnyAsset, AssetError>::Err(
-            AssetError::Make(AssetErrorCode::InvalidPath, "AssetPipeline: resolvedPath is empty"));
-    }
-
-    if (ctx.statistics) {
-        ctx.statistics->OnLoadStart();
-    }
-
-    // 1) Loader を取得
-    IAssetLoader* loader = registry_.Find(ctx.type);
-    if (!loader) {
-        if (ctx.statistics) {
-            ctx.statistics->OnLoadFailure(ctx.id, ctx.type, ctx.nowFrame);
+    Base::Result<Core::AnyAsset, AssetError>
+    AssetPipeline::Load(const LoadContext& ctx) {
+        // 0) 基本検証
+        if (!ctx.HasPath()) {
+            return Base::Result<Core::AnyAsset, AssetError>::Err(
+                AssetError::Make(AssetErrorCode::InvalidPath, "AssetPipeline: resolvedPath is empty"));
         }
-        return Detail::Result<Core::AnyAsset, AssetError>::Err(
-            AssetError::Make(AssetErrorCode::UnsupportedType, "AssetPipeline: no loader for type", ctx.resolvedPath));
-    }
 
-    // 2) bytes を読む
-    auto bytesR = source_.ReadAll(ctx.resolvedPath);
-    if (!bytesR) {
         if (ctx.statistics) {
-            ctx.statistics->OnLoadFailure(ctx.id, ctx.type, ctx.nowFrame);
+            ctx.statistics->OnLoadStart();
         }
-        return Detail::Result<Core::AnyAsset, AssetError>::Err(std::move(bytesR.error()));
-    }
 
-    auto& buf = bytesR.value();
-    Detail::ConstSpan<std::byte> bytes{ buf.data(), buf.size() };
+        // 1) Loader を取得
+        IAssetLoader* loader = registry_.Find(ctx.type);
+        if (!loader) {
+            if (ctx.statistics) {
+                ctx.statistics->OnLoadFailure(ctx.id, ctx.type, ctx.nowFrame);
+            }
+            return Base::Result<Core::AnyAsset, AssetError>::Err(
+                AssetError::Make(AssetErrorCode::UnsupportedType, "AssetPipeline: no loader for type", ctx.resolvedPath));
+        }
 
-    // 3) decode/parse
-    auto assetR = loader->Load(bytes, ctx);
-    if (!assetR) {
+        // 2) bytes を読む
+        auto bytesR = source_.ReadAll(ctx.resolvedPath);
+        if (!bytesR) {
+            if (ctx.statistics) {
+                ctx.statistics->OnLoadFailure(ctx.id, ctx.type, ctx.nowFrame);
+            }
+            return Base::Result<Core::AnyAsset, AssetError>::Err(std::move(bytesR.error()));
+        }
+
+        auto& buf = bytesR.value();
+        Detail::ConstSpan<std::byte> bytes{ buf.data(), buf.size() };
+
+        // 3) decode/parse
+        auto assetR = loader->Load(bytes, ctx);
+        if (!assetR) {
+            if (ctx.statistics) {
+                ctx.statistics->OnLoadFailure(ctx.id, ctx.type, ctx.nowFrame);
+            }
+            return Base::Result<Core::AnyAsset, AssetError>::Err(std::move(assetR.error()));
+        }
+
         if (ctx.statistics) {
-            ctx.statistics->OnLoadFailure(ctx.id, ctx.type, ctx.nowFrame);
+            ctx.statistics->OnLoadSuccess(ctx.id, ctx.type, ctx.nowFrame,
+                                          static_cast<std::uint64_t>(buf.size()),
+                                          0 /*decodedBytes: 分かるなら loader で埋める*/);
         }
-        return Detail::Result<Core::AnyAsset, AssetError>::Err(std::move(assetR.error()));
-    }
 
-    if (ctx.statistics) {
-        ctx.statistics->OnLoadSuccess(ctx.id, ctx.type, ctx.nowFrame,
-                                      static_cast<std::uint64_t>(buf.size()),
-                                      0 /*decodedBytes: 分かるなら loader で埋める*/);
+        return Base::Result<Core::AnyAsset, AssetError>::Ok(std::move(assetR.value()));
     }
-
-    return Detail::Result<Core::AnyAsset, AssetError>::Ok(std::move(assetR.value()));
-}
 
 } // namespace Engine::Asset::Loading

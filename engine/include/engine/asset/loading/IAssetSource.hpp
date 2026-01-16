@@ -6,9 +6,11 @@
 #include <vector>
 
 #include "engine/asset/AssetError.hpp"
-#include "engine/asset/detail/Result.hpp"
+#include "engine/base/Error.hpp"
+#include "engine/base/Result.hpp"
 
 namespace Engine::Asset::Loading {
+    using AssetError = Base::Error<AssetErrorCode>;
 
     // バイト列の所有バッファ（I/O結果）
     using ByteBuffer = std::vector<std::byte>;
@@ -21,7 +23,7 @@ namespace Engine::Asset::Loading {
     public:
         virtual ~IAssetSource() = default;
 
-        virtual Detail::Result<ByteBuffer, AssetError>
+        virtual Base::Result<ByteBuffer, AssetError>
         ReadAll(std::string_view resolvedPath) = 0;
 
         // 任意：将来使うなら

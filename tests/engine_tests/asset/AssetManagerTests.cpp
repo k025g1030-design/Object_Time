@@ -17,37 +17,39 @@
 #include "engine/asset/resolver/AssetPathResolver.hpp"
 #include "engine/asset/catalog/CatalogParser.hpp"
 
+
 using namespace Engine::Asset;
 
 namespace {
+    
 
-// テスト用：メモリから読む IAssetSource
-class MemoryAssetSource final : public Loading::IAssetSource {
-public:
-    void Put(const std::string& path, std::vector<std::byte> bytes) {
-        map_[path] = std::move(bytes);
-    }
-
-    Detail::Result<std::vector<std::byte>, AssetError>
-    ReadAll(std::string_view resolvedPath) override {
-        auto it = map_.find(std::string(resolvedPath));
-        if (it == map_.end()) {
-            return Detail::Result<std::vector<std::byte>, AssetError>::Err(
-                AssetError::Make(AssetErrorCode::SourceReadFailed, "MemoryAssetSource: not found", std::string(resolvedPath)));
+    // テスト用：メモリから読む IAssetSource
+    class MemoryAssetSource final : public Loading::IAssetSource {
+    public:
+        void Put(const std::string& path, std::vector<std::byte> bytes) {
+            map_[path] = std::move(bytes);
         }
-        return Detail::Result<std::vector<std::byte>, AssetError>::Ok(it->second);
+
+        Engine::Base::Result<std::vector<std::byte>, Engine::Base::Error<AssetErrorCode>>
+        ReadAll(std::string_view resolvedPath) override {
+            auto it = map_.find(std::string(resolvedPath));
+            if (it == map_.end()) {
+                return Engine::Base::Result<std::vector<std::byte>, Engine::Base::Error<AssetErrorCode>>::Err(
+                    Engine::Base::Error<AssetErrorCode>::Make(AssetErrorCode::SourceReadFailed, "MemoryAssetSource: not found", std::string(resolvedPath)));
+            }
+            return Engine::Base::Result<std::vector<std::byte>, Engine::Base::Error<AssetErrorCode>>::Ok(it->second);
+        }
+
+    private:
+        std::unordered_map<std::string, std::vector<std::byte>> map_;
+    };
+
+    static std::vector<std::byte> BytesOf(const std::string& s) {
+        std::vector<std::byte> b;
+        b.resize(s.size());
+        for (size_t i = 0; i < s.size(); ++i) b[i] = static_cast<std::byte>(s[i]);
+        return b;
     }
-
-private:
-    std::unordered_map<std::string, std::vector<std::byte>> map_;
-};
-
-static std::vector<std::byte> BytesOf(const std::string& s) {
-    std::vector<std::byte> b;
-    b.resize(s.size());
-    for (size_t i = 0; i < s.size(); ++i) b[i] = static_cast<std::byte>(s[i]);
-    return b;
-}
 
 } // namespace
 
@@ -88,7 +90,7 @@ TEST_CASE("AssetManager: sync load -> cache hit") {
         INFO("code = " << static_cast<int>(h1.error().code));
         INFO("msg  = "  << h1.error().message);
         INFO("detail = "  << h1.error().detail);
-        FAIL("mgr.Load failed, miss ok");
+        FAIL("mgr.Load failed");
     }
 
     auto sp1 = mgr.GetShared<Loaders::TextAsset>(h1.value());

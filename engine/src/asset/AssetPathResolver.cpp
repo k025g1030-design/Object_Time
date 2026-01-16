@@ -13,9 +13,9 @@ namespace Engine::Asset::Resolver {
 
     const AssetPathResolver::Options& AssetPathResolver::GetOptions() const noexcept { return opt_; }
 
-    Detail::Result<std::string, AssetError> AssetPathResolver::Resolve(std::string_view catalogPath) const {
+    Base::Result<std::string, AssetError> AssetPathResolver::Resolve(std::string_view catalogPath) const {
         if (catalogPath.empty()) {
-            return Detail::Result<std::string, AssetError>::Err(
+            return Base::Result<std::string, AssetError>::Err(
                 AssetError::Make(
                     AssetErrorCode::InvalidPath,
                     "AssetPathResolver: empty path",
@@ -34,7 +34,7 @@ namespace Engine::Asset::Resolver {
         // 3) 絶対パス判定
         if (IsAbsolutePath(p)) {
             if (!opt_.allowAbsolutePath) {
-                return Detail::Result<std::string, AssetError>::Err(
+                return Base::Result<std::string, AssetError>::Err(
                     AssetError::Make(
                         AssetErrorCode::InvalidPath,
                         "AssetPathResolver: absolute path is not allowed",
@@ -45,7 +45,7 @@ namespace Engine::Asset::Resolver {
             // 絶対パス許可の場合：dot segments だけ解決（root制約なし）
             bool escaped = false;
             std::string cleaned = RemoveDotSegments(p, escaped);
-            return Detail::Result<std::string, AssetError>::Ok(std::move(cleaned));;
+            return Base::Result<std::string, AssetError>::Ok(std::move(cleaned));;
         }
 
         // 4) assetsRoot と結合
@@ -57,7 +57,7 @@ namespace Engine::Asset::Resolver {
         std::string cleaned = RemoveDotSegments(joined, escapedAboveRoot);
 
         if (escapedAboveRoot && !opt_.allowEscapeAssetsRoot) {
-            return Detail::Result<std::string, AssetError>::Err(
+            return Base::Result<std::string, AssetError>::Err(
                 AssetError::Make(
                     AssetErrorCode::InvalidPath,
                     "AssetPathResolver: path escapes assetsRoot via '..' which is not allowed",
@@ -65,7 +65,7 @@ namespace Engine::Asset::Resolver {
             );
         }
 
-        return Detail::Result<std::string, AssetError>::Ok(std::move(cleaned));;
+        return Base::Result<std::string, AssetError>::Ok(std::move(cleaned));;
     }
 
     std::string AssetPathResolver::NormalizePath(std::string_view path,

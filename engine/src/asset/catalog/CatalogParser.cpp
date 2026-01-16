@@ -4,7 +4,7 @@
 
 namespace Engine::Asset::Catalog {
 
-    Detail::Result<std::vector<RawCatalogEntry>, AssetError>
+    Base::Result<std::vector<RawCatalogEntry>, AssetError>
     CatalogParser::Parse(std::string_view catalogText, std::string_view sourceName) {
         using json = nlohmann::json;
 
@@ -12,12 +12,12 @@ namespace Engine::Asset::Catalog {
         try {
             j = json::parse(catalogText.begin(), catalogText.end());
         } catch (...) {
-            return Detail::Result<std::vector<RawCatalogEntry>, AssetError>::Err(
+            return Base::Result<std::vector<RawCatalogEntry>, AssetError>::Err(
                 AssetError::Make(AssetErrorCode::ParseFailed, "CatalogParser: JSON parse failed", std::string(sourceName)));
         }
 
         if (!j.is_object() || !j.contains("assets") || !j["assets"].is_array()) {
-            return Detail::Result<std::vector<RawCatalogEntry>, AssetError>::Err(
+            return Base::Result<std::vector<RawCatalogEntry>, AssetError>::Err(
                 AssetError::Make(AssetErrorCode::ParseFailed, "CatalogParser: invalid schema (need { assets: [] })", std::string(sourceName)));
         }
 
@@ -31,14 +31,14 @@ namespace Engine::Asset::Catalog {
             if (a.contains("path") && a["path"].is_string()) e.path = a["path"].get<std::string>();
 
             if (e.id.empty() || e.type.empty() || e.path.empty()) {
-                return Detail::Result<std::vector<RawCatalogEntry>, AssetError>::Err(
+                return Base::Result<std::vector<RawCatalogEntry>, AssetError>::Err(
                     AssetError::Make(AssetErrorCode::InvalidCatalogEntry, "CatalogParser: missing id/type/path", std::string(sourceName)));
             }
 
             out.push_back(std::move(e));
         }
 
-        return Detail::Result<std::vector<RawCatalogEntry>, AssetError>::Ok(std::move(out));
+        return Base::Result<std::vector<RawCatalogEntry>, AssetError>::Ok(std::move(out));
     }
 
 } // namespace Engine::Asset::Catalog

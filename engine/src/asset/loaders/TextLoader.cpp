@@ -1,13 +1,14 @@
 #include "engine/asset/loaders/TextLoader.hpp"
 
 namespace Engine::Asset::Loaders {
+    using AssetError = Base::Error<AssetErrorCode>;
 
     AssetType TextLoader::GetType() const noexcept {
         static const AssetType kType = AssetType::FromString("text");
         return kType;
     }
 
-    Detail::Result<Core::AnyAsset, AssetError>
+    Base::Result<Core::AnyAsset, AssetError>
     TextLoader::Load(Detail::ConstSpan<std::byte> bytes, const Loading::LoadContext& ctx) {
         // 空でもテキストとしてはOKだが、運用によってはエラーにしても良い
         auto txt = std::make_shared<TextAsset>();
@@ -29,7 +30,7 @@ namespace Engine::Asset::Loaders {
         }
 
         (void)ctx;
-        return Detail::Result<Core::AnyAsset, AssetError>::Ok(
+        return Base::Result<Core::AnyAsset, AssetError>::Ok(
             Core::AnyAsset::FromShared<TextAsset>(std::move(txt))
         );
     }

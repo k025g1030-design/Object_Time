@@ -35,13 +35,13 @@ namespace Engine::Asset {
 
     // ---------------- public API ----------------
 
-    Detail::Result<AssetHandle, AssetError>
+    Base::Result<AssetHandle, AssetError>
     AssetManager::Load(const AssetId& id, const AssetRequest& request) {
         if (stats_) stats_->OnLoadRequest();
 
         // 1) catalog から解決
         auto entryR = ResolveEntry_(id, request);
-        if (!entryR) return Detail::Result<AssetHandle, AssetError>::Err(std::move(entryR.error()));
+        if (!entryR) return Base::Result<AssetHandle, AssetError>::Err(std::move(entryR.error()));
         const ResolvedEntry e = std::move(entryR.value());
 
         // 2) record 準備
@@ -57,7 +57,7 @@ namespace Engine::Asset {
             ++rec.refCount;
 
             // typed handle を使いたい場合は、Load<T>() を別途用意して MakeTyped<T>() を返すのが自然
-            return Detail::Result<AssetHandle, AssetError>::Ok(
+            return Base::Result<AssetHandle, AssetError>::Ok(
                 AssetHandle::Make(id, rec.generation)
             );
         }
@@ -88,7 +88,7 @@ namespace Engine::Asset {
             // Acquire 相当：呼んだ側はこのhandleを保持する前提
             ++rec.refCount;
 
-            return Detail::Result<AssetHandle, AssetError>::Ok(
+            return Base::Result<AssetHandle, AssetError>::Ok(
                 AssetHandle::Make(id, rec.generation)
             );
         }
@@ -100,11 +100,11 @@ namespace Engine::Asset {
             // その場合は “成功としてhandleを返す” のが開発UX的に強い
             if (request.fallback == AssetRequest::Fallback::KeepOldIfAny && rec.IsReady()) {
                 // 失敗理由は rec.error に残す（※ Ready でも error を持つのは「例外運用」）
-                return Detail::Result<AssetHandle, AssetError>::Ok(
+                return Base::Result<AssetHandle, AssetError>::Ok(
                     AssetHandle::Make(id, rec.generation)
                 );
             }
-            return Detail::Result<AssetHandle, AssetError>::Err(std::move(loadR.error()));
+            return Base::Result<AssetHandle, AssetError>::Err(std::move(loadR.error()));
         }
 
         // Touch / Loaded
@@ -113,7 +113,7 @@ namespace Engine::Asset {
         // Acquire 相当
         ++rec.refCount;
 
-        return Detail::Result<AssetHandle, AssetError>::Ok(
+        return Base::Result<AssetHandle, AssetError>::Ok(
             AssetHandle::Make(id, rec.generation)
         );
     }
@@ -178,7 +178,7 @@ namespace Engine::Asset {
 
     // ---------------- internal helpers ----------------
 
-    Detail::Result<AssetManager::ResolvedEntry, AssetError>
+    Base::Result<AssetManager::ResolvedEntry, AssetError>
     AssetManager::ResolveEntry_(const AssetId& id, const AssetRequest& req) {
         if (stats_) stats_->OnCatalogLookup();
 
@@ -186,7 +186,7 @@ namespace Engine::Asset {
         const auto* entry = catalog_.Find(id); //
         if (!entry) {
             if (stats_) stats_->OnCatalogMiss();
-            return Detail::Result<ResolvedEntry, AssetError>::Err(
+            return Base::Result<ResolvedEntry, AssetError>::Err(
                 AssetError::Make(AssetErrorCode::CatalogNotFound, "AssetCatalog: id not found")
             );
         }
@@ -194,7 +194,7 @@ namespace Engine::Asset {
         // type hint check
         if (req.useTypeHint && req.expectedType.value != 0) {
             if (req.expectedType.value != entry->type.value) {
-                return Detail::Result<ResolvedEntry, AssetError>::Err(
+                return Base::Result<ResolvedEntry, AssetError>::Err(
                     AssetError::Make(AssetErrorCode::InvalidCatalogEntry, "AssetRequest: expectedType mismatch")
                 );
             }
@@ -208,12 +208,12 @@ namespace Engine::Asset {
         out.resolvedPath = req.overridePath.empty() ? entry->resolvedPath : req.overridePath;
 
         if (out.resolvedPath.empty()) {
-            return Detail::Result<ResolvedEntry, AssetError>::Err(
+            return Base::Result<ResolvedEntry, AssetError>::Err(
                 AssetError::Make(AssetErrorCode::InvalidPath, "AssetCatalog: resolvedPath is empty")
             );
         }
 
-        return Detail::Result<ResolvedEntry, AssetError>::Ok(std::move(out));
+        return Base::Result<ResolvedEntry, AssetError>::Ok(std::move(out));
     }
 
     Core::AssetRecord& AssetManager::GetOrCreateRecord_(const AssetId& id, const ResolvedEntry& e) {
@@ -221,7 +221,7 @@ namespace Engine::Asset {
         return storage_.GetOrCreate(id, e.type, e.resolvedPath);
     }
 
-    Detail::Result<void, AssetError>
+    Base::Result<void, AssetError>
     AssetManager::DoLoadSync_(Core::AssetRecord& rec, const ResolvedEntry& e, const AssetRequest& req) {
         const bool wasReady = rec.IsReady();
 
@@ -245,11 +245,11 @@ namespace Engine::Asset {
                 rec.state = AssetState::Ready;
                 rec.error = std::move(r.error());
                 if (stats_) stats_->OnReload(rec.id);
-                return Detail::Result<void, AssetError>::Ok();
+                return Base::Result<void, AssetError>::Ok();
             }
 
             rec.SetFailed(std::move(r.error()));
-            return Detail::Result<void, AssetError>::Err(rec.error);
+            return Base::Result<void, AssetError>::Err(rec.error);
         }
 
         // 成功：AnyAsset を格納
@@ -263,7 +263,7 @@ namespace Engine::Asset {
         // resolvedPath を record に持たせておく（便利）
         if (rec.resolvedPath.empty()) rec.resolvedPath = e.resolvedPath;
 
-        return Detail::Result<void, AssetError>::Ok();
+        return Base::Result<void, AssetError>::Ok();
     }
 
     void AssetManager::EnqueueLoad_(const AssetId& id, const AssetRequest& req) {

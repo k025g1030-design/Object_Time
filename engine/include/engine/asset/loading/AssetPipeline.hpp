@@ -2,12 +2,13 @@
 
 #include "engine/asset/AssetError.hpp"
 #include "engine/asset/core/AnyAsset.hpp"
-#include "engine/asset/detail/Result.hpp"
+#include "engine/base/Result.hpp"
 #include "engine/asset/loading/IAssetSource.hpp"
 #include "engine/asset/loading/LoaderRegistry.hpp"
 #include "engine/asset/loading/LoadContext.hpp"
 
 namespace Engine::Asset::Loading {
+    using AssetError = Base::Error<AssetErrorCode>;
 
     // AssetPipeline：
     // - 読む（IAssetSource）
@@ -17,7 +18,7 @@ namespace Engine::Asset::Loading {
     public:
         AssetPipeline(IAssetSource& source, LoaderRegistry& registry);
 
-        Detail::Result<Core::AnyAsset, AssetError> Load(const LoadContext& ctx);
+        Base::Result<Core::AnyAsset, AssetError> Load(const LoadContext& ctx);
 
     private:
         IAssetSource& source_;

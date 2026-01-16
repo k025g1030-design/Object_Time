@@ -10,8 +10,10 @@
 #include "engine/asset/AssetError.hpp"
 
 #include "engine/asset/core/AnyAsset.hpp"
+#include "engine/base/Error.hpp"
 
 namespace Engine::Asset::Core {
+    using AssetError = Base::Error<AssetErrorCode>;
 
     // AssetRecord:
     // - 「1つの AssetId」に対する状態・キャッシュ実体・エラー等の集合

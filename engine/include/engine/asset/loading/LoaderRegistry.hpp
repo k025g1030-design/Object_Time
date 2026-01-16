@@ -6,10 +6,12 @@
 
 #include "engine/asset/AssetError.hpp"
 #include "engine/asset/AssetType.hpp"
-#include "engine/asset/detail/Result.hpp"
+#include "engine/base/Result.hpp"
 #include "engine/asset/loading/IAssetLoader.hpp"
 
 namespace Engine::Asset::Loading {
+    using AssetError = Base::Error<AssetErrorCode>;
+
 
     // LoaderRegistry：AssetType -> IAssetLoader の登録/検索
     class LoaderRegistry final {
@@ -17,7 +19,7 @@ namespace Engine::Asset::Loading {
         LoaderRegistry() = default;
 
         // 既に登録済みtypeへの上書きはエラー（事故防止）
-        Detail::Result<void, AssetError> Register(std::unique_ptr<IAssetLoader> loader);
+        Base::Result<void, AssetError> Register(std::unique_ptr<IAssetLoader> loader);
 
         // 見つからなければ nullptr
         IAssetLoader* Find(AssetType type) noexcept;

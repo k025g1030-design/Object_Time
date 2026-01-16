@@ -5,9 +5,11 @@
 #include <vector>
 
 #include "engine/asset/AssetError.hpp"
-#include "engine/asset/detail/Result.hpp"
+#include "engine/base/Error.hpp"
+#include "engine/base/Result.hpp"
 
 namespace Engine::Asset::Catalog {
+    using AssetError = Base::Error<AssetErrorCode>;
 
     struct RawCatalogEntry final {
         std::string id;    // stringのまま（ここではAssetIdに変換しない）
@@ -18,7 +20,7 @@ namespace Engine::Asset::Catalog {
     class CatalogParser final {
     public:
         // catalogText: JSON全文
-        Detail::Result<std::vector<RawCatalogEntry>, AssetError>
+        Base::Result<std::vector<RawCatalogEntry>, AssetError>
         Parse(std::string_view catalogText, std::string_view sourceName = "asset_catalog.json");
     };
 

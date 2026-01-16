@@ -7,8 +7,9 @@
 
 #include "engine/asset/AssetError.hpp"
 #include "engine/asset/AssetId.hpp"
-#include "engine/asset/detail/Result.hpp"
+#include "engine/base/Result.hpp"
 #include "engine/asset/catalog/CatalogEntry.hpp"
+#include "engine/base/Error.hpp"
 
 namespace Engine::Asset::Catalog {
     struct RawCatalogEntry;
@@ -21,6 +22,8 @@ namespace Engine::Asset::Resolver {
 
 namespace Engine::Asset {
 
+    using AssetError = Base::Error<AssetErrorCode>;
+
     class AssetCatalog final {
     public:
         AssetCatalog() = default;
@@ -28,7 +31,7 @@ namespace Engine::Asset {
         void Clear();
 
         // resolvedPath込みで構築する
-        Detail::Result<void, AssetError>
+        Base::Result<void, AssetError>
         LoadFromFile(std::string_view catalogJsonPath,
                      Catalog::CatalogParser& parser,
                      const Resolver::AssetPathResolver& resolver);
@@ -39,7 +42,7 @@ namespace Engine::Asset {
         std::vector<const Catalog::CatalogEntry*> Entries() const;
 
     private:
-        Detail::Result<void, AssetError>
+        Base::Result<void, AssetError>
         BuildFromRaw_(const std::vector<Catalog::RawCatalogEntry>& raw,
                       const Resolver::AssetPathResolver& resolver);
 

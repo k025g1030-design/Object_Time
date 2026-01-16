@@ -4,10 +4,12 @@
 #include <string_view>
 
 #include "engine/asset/AssetError.hpp"
-#include "engine/asset/detail/Result.hpp"
+#include "engine/base/Error.hpp"
+#include "engine/base/Result.hpp"
 
 
 namespace Engine::Asset::Resolver {
+    using AssetError = Base::Error<AssetErrorCode>;
 
     class AssetPathResolver final {
     public:
@@ -41,7 +43,7 @@ namespace Engine::Asset::Resolver {
         // Catalog の path を assetsRoot を基準に解決する
         // - 入力: "textures/player.png" / "res://textures/player.png" / "assets://textures/player.png"
         // - 出力: "<assetsRoot>/textures/player.png" (正規化済み)
-        Detail::Result<std::string, AssetError> Resolve(std::string_view catalogPath) const;
+        Base::Result<std::string, AssetError> Resolve(std::string_view catalogPath) const;
 
         // 便利：正規化のみ（単体テストにも使える）
         static std::string NormalizePath(std::string_view path,
